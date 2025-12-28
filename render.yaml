@@ -1,4 +1,5 @@
 services:
+  # 🔧 Backend (Node + Express)
   - name: clockdin-server
     type: web
     env: node
@@ -6,40 +7,43 @@ services:
     plan: free
     repo: https://github.com/hansika-eng/ClockdinF
     branch: main
-    buildCommand: cd server && npm ci
-    startCommand: cd server && npm start
+    rootDir: server
+    buildCommand: npm ci
+    startCommand: npm start
     autoDeploy: true
     envVars:
       - key: MONGO_URI
-        value: ''          # set to your MongoDB Atlas connection string
+        sync: false
       - key: EMAIL_USER
-        value: ''          # SMTP user (used in server)
+        sync: false
       - key: EMAIL_PASS
-        value: ''          # SMTP password (used in server)
+        sync: false
       - key: NODE_ENV
         value: production
 
+  # 🌐 Frontend (React static site)
   - name: clockdin-client
-    type: static_site
-    env: node
+    type: static
     region: oregon
     plan: free
     repo: https://github.com/hansika-eng/ClockdinF
     branch: main
-    buildCommand: cd client && npm ci && npm run build
-    publishPath: client/build
+    rootDir: client
+    buildCommand: npm ci && npm run build
+    publishPath: build
     autoDeploy: true
     envVars:
       - key: REACT_APP_API_BASE
-        value: 'https://clockdin-server.onrender.com' # set to your server URL
+        value: https://clockdin-server.onrender.com
 
 cronJobs:
   - name: check-events-ending-soon
-    schedule: '@daily'
-    command: cd server && node check_events_ending_soon.js
+    schedule: "@daily"
+    command: node check_events_ending_soon.js
+    rootDir: server
     envVars:
       - key: MONGO_URI
-        value: ''  # same as above
+        sync: false
 
 # Notes:
 # - Backend entrypoint: [server/server.js](server/server.js)
