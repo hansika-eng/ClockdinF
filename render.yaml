@@ -1,0 +1,49 @@
+services:
+  - name: clockdin-server
+    type: web
+    env: node
+    region: oregon
+    plan: free
+    repo: https://github.com/hansika-eng/ClockdinF
+    branch: main
+    buildCommand: cd server && npm ci
+    startCommand: cd server && npm start
+    autoDeploy: true
+    envVars:
+      - key: MONGO_URI
+        value: ''          # set to your MongoDB Atlas connection string
+      - key: EMAIL_USER
+        value: ''          # SMTP user (used in server)
+      - key: EMAIL_PASS
+        value: ''          # SMTP password (used in server)
+      - key: NODE_ENV
+        value: production
+
+  - name: clockdin-client
+    type: static_site
+    env: node
+    region: oregon
+    plan: free
+    repo: https://github.com/hansika-eng/ClockdinF
+    branch: main
+    buildCommand: cd client && npm ci && npm run build
+    publishPath: client/build
+    autoDeploy: true
+    envVars:
+      - key: REACT_APP_API_BASE
+        value: 'https://clockdin-server.onrender.com' # set to your server URL
+
+cronJobs:
+  - name: check-events-ending-soon
+    schedule: '@daily'
+    command: cd server && node check_events_ending_soon.js
+    envVars:
+      - key: MONGO_URI
+        value: ''  # same as above
+
+# Notes:
+# - Backend entrypoint: [server/server.js](server/server.js)
+# - Client build config: [client/package.json](client/package.json)
+# - Server package file: [server/package.json](server/package.json)
+# - Reminder/cron script: [server/check_events_ending_soon.js](server/check_events_ending_soon.js)
+# - Reminder endpoints: [server/routes/reminders.js](server/routes/reminders.js)
